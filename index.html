@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Barang Datang Supplier - Firebase</title>
+    <title>Aplikasi Barang Datang Supplier - Android View</title>
     <!-- Bootstrap 5 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome untuk ikon -->
@@ -11,221 +11,221 @@
     <!-- SheetJS (XLSX) Library untuk Ekspor Excel Asli -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
+        /* Mengatur tampilan agar menyerupai layar perangkat Android / Mobile */
+        body {
+            background-color: #eef2f5;
+            font-size: 0.82rem; /* Ukuran font keseluruhan lebih kecil ala mobile */
+        }
+        .mobile-container {
+            max-width: 720px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .app-header {
+            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+        }
+        .app-header h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 2px; }
+        .app-header p { font-size: 0.75rem; opacity: 0.85; margin-bottom: 8px; }
+
+        /* Kompak form dan input */
+        .form-label { font-size: 0.78rem; font-weight: 600; margin-bottom: 2px; }
+        .form-control, .form-select { font-size: 0.8rem; padding: 6px 10px; border-radius: 8px; }
+        .btn { font-size: 0.8rem; padding: 6px 14px; border-radius: 8px; }
+
+        /* Tabel compact ala android */
         .table-excel { border-color: #dee2e6; }
         .table-excel th {
             background-color: #f1f3f5;
             color: #495057;
             border-bottom: 2px solid #ced4da;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             white-space: nowrap;
-            padding-top: 6px;
-            padding-bottom: 6px;
+            padding: 6px 8px;
         }
-        /* Padding sel atas dan bawah lebih sempit (compact) */
         .table-excel td { 
-            font-size: 0.9rem; 
+            font-size: 0.78rem; 
             vertical-align: middle; 
             color: #212529; 
-            padding-top: 1px !important; 
-            padding-bottom: 1px !important; 
+            padding: 4px 8px !important; 
         }
-        .table-container { max-height: 480px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
+        .table-container { max-height: 420px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; }
+        .nav-pills .nav-link { font-size: 0.8rem; padding: 6px 14px; }
         .nav-pills .nav-link.active { background-color: #0d6efd; font-weight: 600; }
-        .badge-unit { font-weight: 500; padding: 0.35em 0.65em; }
+        .badge-unit { font-weight: 500; padding: 0.25em 0.5em; font-size: 0.7rem; }
         
-        /* Nama barang memanjang ke samping (tidak dibungkus/wrap) */
         .nama-barang-kolom {
             white-space: nowrap !important;
         }
         
-        /* Style Indikator Koneksi */
         .connection-indicator {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
+            gap: 5px;
+            font-size: 0.72rem;
             font-weight: 500;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 50rem;
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
+            background-color: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
         }
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             display: inline-block;
         }
-        .status-dot.connecting { background-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
-        .status-dot.connected { background-color: #198754; box-shadow: 0 0 8px #198754; }
-        .status-dot.error { background-color: #dc3545; box-shadow: 0 0 8px #dc3545; }
+        .status-dot.connecting { background-color: #ffc107; }
+        .status-dot.connected { background-color: #198754; box-shadow: 0 0 6px #198754; }
+        .status-dot.error { background-color: #dc3545; }
 
-        /* Gaya Pop-up Modal ala Android Material Design */
+        /* Modal Android Style */
         .modal-content {
             border-radius: 16px;
             border: none;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            font-size: 0.85rem;
         }
-        .modal-header {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .modal-footer {
-            border-top: none;
-        }
+        .modal-header { border-bottom: none; padding-bottom: 0; }
+        .modal-footer { border-top: none; }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <div class="container my-5">
+    <div class="mobile-container">
         
         <!-- HEADER & NAVIGASI MENU -->
-        <div class="row justify-content-center mb-4">
-            <div class="col-lg-11 text-center">
-                <h2 class="fw-bold mb-2"><i class="fas fa-boxes-stacked me-2 text-primary"></i>Sistem Barang Datang Supplier</h2>
-                <p class="text-muted mb-2">Terhubung dengan .Realtime Database</p>
-                
-                <!-- INDIKATOR STATUS KONEKSI -->
-                <div class="mb-3">
-                    <div id="connectionStatus" class="connection-indicator">
-                        <span class="status-dot connecting" id="statusDot"></span>
-                        <span id="statusText">Memeriksa konfigurasi Realtime Database...</span>
-                    </div>
-                </div>
-                
-                <!-- Tombol Navigasi Menu -->
-                <ul class="nav nav-pills justify-content-center gap-2 mt-3" id="pills-tab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active px-4 py-2 rounded-pill shadow-sm" id="menu-form-tab" data-bs-toggle="pill" data-bs-target="#menu-form" type="button" role="tab">
-                            <i class="fas fa-pen-to-square me-2"></i>Form Input Barang
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link px-4 py-2 rounded-pill shadow-sm position-relative" id="menu-riwayat-tab" data-bs-toggle="pill" data-bs-target="#menu-riwayat" type="button" role="tab" onclick="clearNotification()">
-                            <i class="fas fa-table-list me-2"></i>Menu Riwayat Data
-                            <span id="badgeNotif" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
-                        </button>
-                    </li>
-                </ul>
+        <div class="app-header">
+            <h4><i class="fas fa-boxes-stacked me-2"></i>Barang Datang Supplier</h4>
+            <p>Sistem Manajemen Gudang</p>
+            <div id="connectionStatus" class="connection-indicator">
+                <span class="status-dot connecting" id="statusDot"></span>
+                <span id="statusText">Menghubungkan ke Database...</span>
             </div>
         </div>
 
+        <div class="p-3 bg-white border-bottom text-center">
+            <ul class="nav nav-pills justify-content-center gap-2" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active px-3 py-1.5 rounded-pill shadow-sm" id="menu-form-tab" data-bs-toggle="pill" data-bs-target="#menu-form" type="button" role="tab">
+                        <i class="fas fa-pen-to-square me-1"></i>Form Input
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-3 py-1.5 rounded-pill shadow-sm" id="menu-riwayat-tab" data-bs-toggle="pill" data-bs-target="#menu-riwayat" type="button" role="tab">
+                        <i class="fas fa-table-list me-1"></i>Menu Riwayat
+                    </button>
+                </li>
+            </ul>
+        </div>
+
         <!-- KONTEN MENU -->
-        <div class="tab-content" id="pills-tabContent">
+        <div class="tab-content p-3" id="pills-tabContent">
             
             <!-- 1. MENU FORM INPUT -->
             <div class="tab-pane fade show active" id="menu-form" role="tabpanel">
-                <div class="row justify-content-center">
-                    <div class="col-lg-8">
-                        <div class="card shadow-lg border-0 rounded-4">
-                            <div class="card-header bg-primary text-white text-center py-4 rounded-top-4">
-                                <h4 class="mb-0"><i class="fas fa-truck-loading me-2"></i>Form Input Barang Datang</h4>
-                                <p class="mb-0 text-white-50 mt-1">Data akan otomatis tersimpan ke Realtime Database</p>
+                <div class="card border-0 shadow-sm rounded-4 bg-light">
+                    <div class="card-body p-3">
+                        <form id="formBarangDatang" onsubmit="handleTambahData(event)">
+                            <input type="hidden" id="editId">
+                            <div class="row g-2">
+                                <div class="col-6 mb-2">
+                                    <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="tanggal" required>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label for="supplier" class="form-label">Supplier <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="supplier" placeholder="Nama supplier" required>
+                                </div>
                             </div>
-                            <div class="card-body p-4 p-md-5">
-                                <form id="formBarangDatang" onsubmit="handleTambahData(event)">
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="tanggal" class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
-                                            <input type="date" class="form-control" id="tanggal" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="supplier" class="form-label fw-semibold">Supplier <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="supplier" placeholder="Nama supplier/vendor" required>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="namaBarang" class="form-label fw-semibold">Nama Barang <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="namaBarang" placeholder="Masukkan nama barang" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="noPo" class="form-label fw-semibold">No. PO (Purchase Order) <span class="text-muted fw-normal">(Opsional)</span></label>
-                                            <input type="text" class="form-control" id="noPo" placeholder="Contoh: PO/2026/10/001">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label for="noSj" class="form-label fw-semibold">No. SJ (Surat Jalan) <span class="text-muted fw-normal">(Opsional)</span></label>
-                                            <input type="text" class="form-control" id="noSj" placeholder="Contoh: SJ-ABC-98765">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label for="qty" class="form-label fw-semibold">QTY (Jumlah) <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control" id="qty" min="1" placeholder="Jumlah" required>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label for="unit" class="form-label fw-semibold">Unit (Satuan) <span class="text-danger">*</span></label>
-                                            <select class="form-select" id="unit" required>
-                                                <option value="" disabled selected>Pilih Satuan</option>
-                                                <option value="pcs">Pcs</option>
-                                                <option value="pack">Pack</option>
-                                                <option value="kg">Kg</option>
-                                                <option value="roll">Roll</option>
-                                                <option value="sheet">Sheet</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                                        <button type="reset" class="btn btn-outline-secondary me-md-2 px-4"><i class="fas fa-undo me-1"></i> Reset</button>
-                                        <button type="submit" class="btn btn-primary px-4" id="btnSimpan">
-                                            <span id="btnSimpanText"><i class="fas fa-save me-1"></i> Simpan </span>
-                                        </button>
-                                    </div>
-                                </form>
+                            <div class="row g-2">
+                                <div class="col-6 mb-2">
+                                    <label for="namaBarang" class="form-label">Nama Barang <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="namaBarang" placeholder="Nama barang" required>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <label for="noPo" class="form-label">No. PO <span class="text-muted">(Opsional)</span></label>
+                                    <input type="text" class="form-control" id="noPo" placeholder="No PO">
+                                </div>
                             </div>
-                        </div>
+                            <div class="row g-2">
+                                <div class="col-4 mb-2">
+                                    <label for="noSj" class="form-label">No. SJ <span class="text-muted">(Opsional)</span></label>
+                                    <input type="text" class="form-control" id="noSj" placeholder="No SJ">
+                                </div>
+                                <div class="col-4 mb-2">
+                                    <label for="qty" class="form-label">QTY <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="qty" min="1" placeholder="Jumlah" required>
+                                </div>
+                                <div class="col-4 mb-2">
+                                    <label for="unit" class="form-label">Unit <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="unit" required>
+                                        <option value="" disabled selected>Pilih</option>
+                                        <option value="pcs">Pcs</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="roll">Roll</option>
+                                        <option value="sheet">Sheet</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-secondary px-3" onclick="resetForm()"><i class="fas fa-undo me-1"></i> Reset</button>
+                                <button type="submit" class="btn btn-primary px-3" id="btnSimpan">
+                                    <span id="btnSimpanText"><i class="fas fa-save me-1"></i> Simpan</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
 
             <!-- 2. MENU RIWAYAT DATA -->
             <div class="tab-pane fade" id="menu-riwayat" role="tabpanel">
-                <div class="row justify-content-center">
-                    <div class="col-lg-11">
-                        <div class="card shadow-lg border-0 rounded-4">
-                            <div class="card-header bg-dark text-white py-3 rounded-top-4 d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Riwayat Barang Datang</h5>
-                                    <span class="badge bg-primary rounded-pill" id="totalDataBadge">0 Data</span>
-                                </div>
-                                <div class="d-flex flex-wrap align-items-center gap-2">
-                                    <div class="input-group" style="width: 250px;">
-                                        <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
-                                        <input type="text" id="inputPencarian" class="form-control border-0 form-control-sm" placeholder="Cari data..." onkeyup="filterTabel()">
-                                    </div>
-                                    <button class="btn btn-outline-light btn-sm" onclick="exportToXLSX()" title="Download Format XLSX">
-                                        <i class="fas fa-file-excel text-success me-1"></i> Export
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="card-body p-4">
-                                <div class="table-container table-responsive">
-                                    <table class="table table-bordered table-hover table-excel align-middle mb-0" id="tabelRiwayat">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-center" width="4%">No</th>
-                                                <th width="11%">Tanggal</th>
-                                                <th width="18%">Supplier</th>
-                                                <th>Nama Barang</th>
-                                                <th width="14%">No. PO</th>
-                                                <th width="14%">No. SJ</th>
-                                                <th class="text-center" width="9%">QTY</th>
-                                                <th class="text-center" width="6%">Unit</th>
-                                                <th class="text-center" width="4%">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="barisDataRiwayat">
-                                            <tr><td colspan="9" class="text-center text-muted py-5">Menunggu koneksi Realtime Database...</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-3 text-muted small">
-                                    <span id="infoJumlahBaris">Menampilkan semua data</span>
-                                    <span>Realtime Database</span>
-                                </div>
-                            </div>
+                <div class="card border-0 shadow-sm rounded-4 bg-light">
+                    <div class="card-header bg-dark text-white py-2 px-3 rounded-top-4 d-flex justify-content-between align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="fs-7 fw-semibold">Riwayat Data</span>
+                            <span class="badge bg-primary rounded-pill fs-8" id="totalDataBadge">0</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <input type="text" id="inputPencarian" class="form-control form-control-sm py-1" style="width: 140px;" placeholder="Cari..." onkeyup="filterTabel()">
+                            <button class="btn btn-outline-light btn-sm py-1 px-2" onclick="exportToXLSX()" title="Export XLSX">
+                                <i class="fas fa-file-excel text-success"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="table-container table-responsive">
+                            <table class="table table-bordered table-hover table-excel align-middle mb-0" id="tabelRiwayat">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" width="4%">No</th>
+                                        <th width="12%">Tgl</th>
+                                        <th width="18%">Supplier</th>
+                                        <th>Nama Barang</th>
+                                        <th width="14%">No. PO</th>
+                                        <th width="14%">No. SJ</th>
+                                        <th class="text-center" width="8%">QTY</th>
+                                        <th class="text-center" width="6%">Unit</th>
+                                        <th class="text-center" width="4%">Edit</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="barisDataRiwayat">
+                                    <tr><td colspan="9" class="text-center text-muted py-3">Memuat data...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 text-muted fs-8 px-1">
+                            <span id="infoJumlahBaris">Semua data</span>
+                            <span>Database Realtime</span>
                         </div>
                     </div>
                 </div>
@@ -235,18 +235,18 @@
     </div>
 
     <!-- MODAL ANDROID STYLE -->
-    <div class="modal fade" id="androidModal" tabindex="-1" aria-labelledby="androidModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content p-3">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-primary" id="androidModalTitle"><i class="fas fa-info-circle me-2"></i>Informasi</h5>
+    <div class="modal fade" id="androidModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content p-2">
+                <div class="modal-header py-1">
+                    <h6 class="modal-title fw-bold text-primary" id="androidModalTitle"><i class="fas fa-info-circle me-1"></i>Informasi</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body py-3">
-                    <p id="androidModalMessage" class="mb-0 text-secondary fs-6">Pesan pemberitahuan...</p>
+                <div class="modal-body py-2">
+                    <p id="androidModalMessage" class="mb-0 text-secondary fs-8">Pesan...</p>
                 </div>
-                <div class="modal-footer pt-0" id="androidModalFooter">
-                    <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">OK</button>
+                <div class="modal-footer pt-0 pb-1" id="androidModalFooter">
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
@@ -260,7 +260,7 @@
     <!-- FIREBASE REALTIME DATABASE SDK & LOGIKA -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, remove, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, push, update, onValue, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // ==========================================
         // GANTI DENGAN KONFIGURASI FIREBASE ANDA
@@ -277,7 +277,6 @@
 
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
-        let hasUnreadNotifications = true;
 
         function updateConnectionStatus(status, message) {
             statusDot.className = 'status-dot ' + status;
@@ -295,29 +294,14 @@
 
         window.showAndroidAlert = function(title, message, isError = false) {
             document.getElementById('androidModalTitle').innerHTML = isError ? 
-                '<i class="fas fa-exclamation-circle me-2 text-danger"></i>Perhatian' : 
-                '<i class="fas fa-check-circle me-2 text-success"></i>Sukses';
+                '<i class="fas fa-exclamation-circle me-1 text-danger"></i>Perhatian' : 
+                '<i class="fas fa-check-circle me-1 text-success"></i>Sukses';
             document.getElementById('androidModalMessage').textContent = message;
             document.getElementById('androidModalFooter').innerHTML = `
-                <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" data-bs-dismiss="modal">OK</button>
             `;
             const modal = new bootstrap.Modal(document.getElementById('androidModal'));
             modal.show();
-        };
-
-        window.showAndroidConfirm = function(title, message, onConfirm) {
-            document.getElementById('androidModalTitle').innerHTML = '<i class="fas fa-question-circle me-2 text-warning"></i>' + title;
-            document.getElementById('androidModalMessage').textContent = message;
-            document.getElementById('androidModalFooter').innerHTML = `
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
-                <button type="button" id="confirmActionBtn" class="btn btn-danger rounded-pill px-4" data-bs-dismiss="modal">Ya, Hapus</button>
-            `;
-            const modal = new bootstrap.Modal(document.getElementById('androidModal'));
-            modal.show();
-
-            document.getElementById('confirmActionBtn').onclick = function() {
-                onConfirm();
-            };
         };
 
         const isConfigValid = firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("MASUKKAN_");
@@ -325,9 +309,9 @@
         if (!isConfigValid) {
             updateConnectionStatus('error', 'Konfigurasi Firebase belum diisi');
             document.getElementById('barisDataRiwayat').innerHTML = `
-                <tr><td colspan="9" class="text-center text-danger py-5">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
-                    Harap masukkan konfigurasi Firebase Realtime Database Anda yang valid!
+                <tr><td colspan="9" class="text-center text-danger py-3">
+                    <i class="fas fa-exclamation-triangle fa-lg mb-1"></i><br>
+                    Harap masukkan konfigurasi Firebase!
                 </td></tr>
             `;
         } else {
@@ -335,7 +319,7 @@
             try {
                 app = initializeApp(firebaseConfig);
                 db = getDatabase(app);
-                updateConnectionStatus('connecting', 'Menghubungkan ke Realtime Database...');
+                updateConnectionStatus('connecting', 'Menghubungkan...');
 
                 document.getElementById('tanggal').valueAsDate = new Date();
                 let dataRiwayat = [];
@@ -344,39 +328,51 @@
                     event.preventDefault();
                     const btnSimpan = document.getElementById('btnSimpan');
                     const btnText = document.getElementById('btnSimpanText');
+                    const editId = document.getElementById('editId').value;
                     
                     btnSimpan.disabled = true;
-                    btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...';
+                    btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Simpan...';
 
                     try {
                         const valNoPo = document.getElementById('noPo').value.trim();
                         const valNoSj = document.getElementById('noSj').value.trim();
 
-                        const newData = {
+                        const dataPayload = {
                             tanggal: document.getElementById('tanggal').value,
                             supplier: document.getElementById('supplier').value,
                             namaBarang: document.getElementById('namaBarang').value,
                             noPo: valNoPo !== "" ? valNoPo : "-",
                             noSj: valNoSj !== "" ? valNoSj : "-",
                             qty: Number(document.getElementById('qty').value),
-                            unit: document.getElementById('unit').value,
-                            createdAt: Date.now()
+                            unit: document.getElementById('unit').value
                         };
 
-                        const dbRef = ref(db, 'barang_datang');
-                        await push(dbRef, newData);
+                        if (editId) {
+                            const itemRef = ref(db, 'barang_datang/' + editId);
+                            await update(itemRef, dataPayload);
+                            showAndroidAlert("Berhasil", "Data diperbarui!");
+                        } else {
+                            dataPayload.createdAt = Date.now();
+                            const dbRef = ref(db, 'barang_datang');
+                            await push(dbRef, dataPayload);
+                            showAndroidAlert("Berhasil", "Data disimpan!");
+                        }
 
-                        hasUnreadNotifications = true;
-                        showAndroidAlert("Berhasil", "Data berhasil disimpan ke Realtime Database!");
-                        document.getElementById('formBarangDatang').reset();
-                        document.getElementById('tanggal').valueAsDate = new Date();
+                        resetForm();
                     } catch (error) {
-                        console.error("Gagal menyimpan data: ", error);
-                        showAndroidAlert("Gagal", "Terjadi kesalahan saat menyimpan data: " + error.message, true);
+                        console.error("Gagal: ", error);
+                        showAndroidAlert("Gagal", "Kesalahan: " + error.message, true);
                     } finally {
                         btnSimpan.disabled = false;
-                        btnText.innerHTML = '<i class="fas fa-save me-1"></i> Simpan ke Realtime DB';
+                        btnText.innerHTML = '<i class="fas fa-save me-1"></i> Simpan';
                     }
+                };
+
+                window.resetForm = function() {
+                    document.getElementById('formBarangDatang').reset();
+                    document.getElementById('editId').value = '';
+                    document.getElementById('tanggal').valueAsDate = new Date();
+                    document.getElementById('btnSimpanText').innerHTML = '<i class="fas fa-save me-1"></i> Simpan';
                 };
 
                 const dbRef = query(ref(db, 'barang_datang'), orderByChild('createdAt'));
@@ -389,29 +385,28 @@
                         });
                     });
                     
-                    updateBadgeNotif();
                     renderTabel(dataRiwayat);
-                    updateConnectionStatus('connected', 'Terhubung ke Realtime Database (Live)');
+                    updateConnectionStatus('connected', 'Terhubung (Live)');
                 }, (error) => {
-                    console.error("Gagal koneksi realtime: ", error);
-                    updateConnectionStatus('error', 'Koneksi Terputus / Gagal Akses');
+                    console.error("Koneksi error: ", error);
+                    updateConnectionStatus('error', 'Koneksi Terputus');
                 });
 
                 window.renderTabel = function(data) {
                     const tbody = document.getElementById('barisDataRiwayat');
                     tbody.innerHTML = '';
-                    document.getElementById('totalDataBadge').textContent = `${dataRiwayat.length} Data`;
+                    document.getElementById('totalDataBadge').textContent = dataRiwayat.length;
 
                     if (data.length === 0) {
                         tbody.innerHTML = `
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-5">
-                                    <i class="fas fa-folder-open fa-2x mb-2 text-secondary"></i><br>
-                                    Belum ada data barang datang.
+                                <td colspan="9" class="text-center text-muted py-4">
+                                    <i class="fas fa-folder-open fa-lg mb-1 text-secondary"></i><br>
+                                    Belum ada data.
                                 </td>
                             </tr>
                         `;
-                        document.getElementById('infoJumlahBaris').textContent = 'Tidak ada data';
+                        document.getElementById('infoJumlahBaris').textContent = 'Kosong';
                         return;
                     }
 
@@ -430,8 +425,8 @@
                         const groupHeaderTr = document.createElement('tr');
                         groupHeaderTr.className = 'table-secondary fw-bold';
                         groupHeaderTr.innerHTML = `
-                            <td colspan="9" class="py-1 text-primary">
-                                <i class="fas fa-folder-open me-2"></i>No. PO: ${escapeHtml(poNumber)} (${items.length} item)
+                            <td colspan="9" class="py-1 text-primary fs-8">
+                                <i class="fas fa-folder-open me-1"></i>No. PO: ${escapeHtml(poNumber)} (${items.length})
                             </td>
                         `;
                         tbody.appendChild(groupHeaderTr);
@@ -440,7 +435,7 @@
                             let badgeColor = 'bg-secondary';
                             const unitLower = item.unit ? item.unit.toLowerCase() : '';
                             if (unitLower === 'pcs') badgeColor = 'bg-primary';
-                            else if (unitLower === 'box') badgeColor = 'bg-success';
+                            else if (unitLower === 'pack') badgeColor = 'bg-success';
                             else if (unitLower === 'kg') badgeColor = 'bg-warning text-dark';
                             else if (unitLower === 'roll') badgeColor = 'bg-info text-dark';
                             else if (unitLower === 'sheet') badgeColor = 'bg-danger';
@@ -456,8 +451,8 @@
                                 <td class="text-center fw-bold">${Number(item.qty).toLocaleString()}</td>
                                 <td class="text-center"><span class="badge ${badgeColor} badge-unit text-uppercase">${item.unit}</span></td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="hapusData('${item.id}')" title="Hapus Baris">
-                                        <i class="fas fa-trash-alt"></i>
+                                    <button class="btn btn-sm btn-outline-primary border-0 p-0 px-1" onclick="muatDataEdit('${item.id}')" title="Edit">
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                 </td>
                             `;
@@ -465,20 +460,27 @@
                         });
                     }
 
-                    document.getElementById('infoJumlahBaris').textContent = `Menampilkan ${data.length} dari total ${dataRiwayat.length} data tersimpan`;
+                    document.getElementById('infoJumlahBaris').textContent = `Ditampilkan ${data.length} dari ${dataRiwayat.length}`;
                 };
 
-                window.hapusData = function(id) {
-                    showAndroidConfirm("Konfirmasi Hapus", "Apakah Anda yakin ingin menghapus data ini dari database?", async () => {
-                        try {
-                            const itemRef = ref(db, 'barang_datang/' + id);
-                            await remove(itemRef);
-                            showAndroidAlert("Berhasil", "Data berhasil dihapus.");
-                        } catch (error) {
-                            console.error("Gagal menghapus data: ", error);
-                            showAndroidAlert("Gagal", "Gagal menghapus data.", true);
-                        }
-                    });
+                window.muatDataEdit = function(id) {
+                    const item = dataRiwayat.find(d => d.id === id);
+                    if (!item) return;
+
+                    document.getElementById('editId').value = item.id;
+                    document.getElementById('tanggal').value = item.tanggal;
+                    document.getElementById('supplier').value = item.supplier;
+                    document.getElementById('namaBarang').value = item.namaBarang;
+                    document.getElementById('noPo').value = item.noPo !== '-' ? item.noPo : '';
+                    document.getElementById('noSj').value = item.noSj !== '-' ? item.noSj : '';
+                    document.getElementById('qty').value = item.qty;
+                    document.getElementById('unit').value = item.unit;
+
+                    document.getElementById('btnSimpanText').innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update';
+
+                    const formTab = new bootstrap.Tab(document.getElementById('menu-form-tab'));
+                    formTab.show();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
 
                 window.filterTabel = function() {
@@ -496,25 +498,9 @@
                     renderTabel(filteredData);
                 };
 
-                function updateBadgeNotif() {
-                    const badge = document.getElementById('badgeNotif');
-                    if (hasUnreadNotifications && dataRiwayat.length > 0) {
-                        badge.style.display = 'inline-block';
-                        badge.textContent = dataRiwayat.length;
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
-
-                window.clearNotification = function() {
-                    hasUnreadNotifications = false;
-                    const badge = document.getElementById('badgeNotif');
-                    badge.style.display = 'none';
-                };
-
                 window.exportToXLSX = function() {
                     if (dataRiwayat.length === 0) {
-                        showAndroidAlert("Perhatian", "Tidak ada data untuk diexport!", true);
+                        showAndroidAlert("Perhatian", "Tidak ada data!", true);
                         return;
                     }
 
@@ -547,8 +533,8 @@
                 }
 
             } catch (error) {
-                console.error("Kesalahan inisialisasi:", error);
-                updateConnectionStatus('error', 'Gagal memuat Realtime Database');
+                console.error("Init error:", error);
+                updateConnectionStatus('error', 'Gagal memuat Database');
             }
         }
     </script>
